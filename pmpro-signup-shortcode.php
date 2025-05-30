@@ -405,46 +405,61 @@ function pmprosus_signup_shortcode($atts, $content=null, $code="")
 								<?php if( !empty( $custom_fields ) ) { do_action( 'pmpro_signup_form_before_submit' ); } ?>
 
 								<?php
-									if( ! empty( $custom_fields ) ) {
-										// Display User fields.
-										if ( class_exists( 'PMPro_Field_Group' ) ) {
-											$field_groups = PMPro_Field_Group::get_all();
-											foreach ( $field_groups as $field_group ) {
-												$fields_to_display = $field_group->get_fields_to_display(
-													array(
-														'scope' => 'checkout',
-													)
-												);
+									if ( class_exists( 'PMPro_Field_Group' ) ) {
+										// Loop through all the field groups.
+										$field_groups = PMPro_Field_Group::get_all();
+										foreach ( $field_groups as $field_group ) {
+											// Get the fields to display.
+											$fields_to_display = $field_group->get_fields_to_display(
+												array(
+													'scope' => 'checkout',
+												)
+											);
 
-												if ( empty( $fields_to_display ) ) {
+											if ( empty( $fields_to_display ) ) {
+												continue;
+											}
+
+											foreach ( $fields_to_display as $field ) {
+												// Display the field label, if it should be shown.
+												if ( ! empty( $field->showmainlabel ) ) { ?>
+													<label for="<?php echo esc_attr( $field->name ); ?>" class="<?php echo esc_attr( pmpro_get_element_class( 'pmpro_form_label' ) ); ?>">
+														<?php echo wp_kses_post( $field->label ); ?>
+														<?php
+														// Show an asterisk if the field is required.
+														if ( ! empty( $field->required ) && ! empty( $field->showrequired ) ) {
+															?>
+															<span class="<?php echo esc_attr( pmpro_get_element_class( 'pmpro_asterisk' ) ); ?>"><abbr title="<?php echo esc_attr__( 'Required Field', 'pmpro-signup-shortcode' ); ?>">*</abbr></span>
+															<?php
+														}
+														?>
+													</label>															
+													<?php
+												}
+												// Display the field.
+												$field->display();
+											}
+										}
+									} else {
+										// Legacy support for displaying User Fields on PMPro < 3.4.
+										global $pmpro_user_fields;
+										foreach( $pmpro_user_fields as $group ) {
+											foreach( $group as $field ) {
+												if ( ! pmpro_is_field( $field ) ) {
 													continue;
 												}
 
-												foreach ( $fields_to_display as $field ) {
-													$field->display();
+												if ( ! pmpro_check_field_for_level( $field ) ) {
+													continue;
 												}
-											}
-										} else {
-											// Legacy support for displaying User Fields.
-											global $pmpro_user_fields;
-											foreach( $pmpro_user_fields as $group ) {
-												foreach( $group as $field ) {
-													if ( ! pmpro_is_field( $field ) ) {
-														continue;
-													}
 
-													if ( ! pmpro_check_field_for_level( $field ) ) {
-														continue;
+												if( ! isset( $field->profile ) || $field->profile !== 'only' && $field->profile !== 'only_admin' ) {
+													if ( ! empty( $field->required ) ) {
+														$field->showrequired = 'label';
+													} else {
+														$field->showrequired = '';
 													}
-
-													if( ! isset( $field->profile ) || $field->profile !== 'only' && $field->profile !== 'only_admin' ) {
-														if ( ! empty( $field->required ) ) {
-															$field->showrequired = 'label';
-														} else {
-															$field->showrequired = '';
-														}
-														$field->displayAtCheckout();
-													}
+													$field->displayAtCheckout();
 												}
 											}
 										}
