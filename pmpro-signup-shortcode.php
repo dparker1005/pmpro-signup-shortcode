@@ -406,25 +406,45 @@ function pmprosus_signup_shortcode($atts, $content=null, $code="")
 
 								<?php
 									if( ! empty( $custom_fields ) ) {
-										//Adds support for User Fields
-										global $pmpro_user_fields;
-										foreach( $pmpro_user_fields as $group ) {
-											foreach( $group as $field ) {
-												if ( ! pmpro_is_field( $field ) ) {
+										// Display User fields.
+										if ( class_exists( 'PMPro_Field_Group' ) ) {
+											$field_groups = PMPro_Field_Group::get_all();
+											foreach ( $field_groups as $field_group ) {
+												$fields_to_display = $field_group->get_fields_to_display(
+													array(
+														'scope' => 'checkout',
+													)
+												);
+
+												if ( empty( $fields_to_display ) ) {
 													continue;
 												}
 
-												if ( ! pmpro_check_field_for_level( $field ) ) {
-													continue;
+												foreach ( $fields_to_display as $field ) {
+													$field->display();
 												}
-
-												if( ! isset( $field->profile ) || $field->profile !== 'only' && $field->profile !== 'only_admin' ) {
-													if ( ! empty( $field->required ) ) {
-														$field->showrequired = 'label';
-													} else {
-														$field->showrequired = '';
+											}
+										} else {
+											// Legacy support for displaying User Fields.
+											global $pmpro_user_fields;
+											foreach( $pmpro_user_fields as $group ) {
+												foreach( $group as $field ) {
+													if ( ! pmpro_is_field( $field ) ) {
+														continue;
 													}
-													$field->displayAtCheckout();
+
+													if ( ! pmpro_check_field_for_level( $field ) ) {
+														continue;
+													}
+
+													if( ! isset( $field->profile ) || $field->profile !== 'only' && $field->profile !== 'only_admin' ) {
+														if ( ! empty( $field->required ) ) {
+															$field->showrequired = 'label';
+														} else {
+															$field->showrequired = '';
+														}
+														$field->displayAtCheckout();
+													}
 												}
 											}
 										}
