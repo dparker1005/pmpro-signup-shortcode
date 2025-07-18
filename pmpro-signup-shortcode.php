@@ -406,25 +406,42 @@ function pmprosus_signup_shortcode($atts, $content=null, $code="")
 
 								<?php
 									if( ! empty( $custom_fields ) ) {
-										//Adds support for User Fields
-										global $pmpro_user_fields;
-										foreach( $pmpro_user_fields as $group ) {
-											foreach( $group as $field ) {
-												if ( ! pmpro_is_field( $field ) ) {
-													continue;
-												}
-
-												if ( ! pmpro_check_field_for_level( $field ) ) {
-													continue;
-												}
-
-												if( ! isset( $field->profile ) || $field->profile !== 'only' && $field->profile !== 'only_admin' ) {
-													if ( ! empty( $field->required ) ) {
-														$field->showrequired = 'label';
-													} else {
-														$field->showrequired = '';
+										// Adds support for User Fields.
+										if ( class_exists( 'PMPro_Field_Group' ) ) {
+											// Loop through all the field groups.
+											$field_groups = PMPro_Field_Group::get_all();
+											foreach ( $field_groups as $field_group ) {
+												$field_group->display(
+													array(
+														'markup' => 'div',
+														'show_group_label' => false,
+														'scope' => 'checkout',
+														'prefill_from_request' => true,
+														'show_required' => true,
+													)
+												);
+											}
+										} else {
+											// Legacy support for displaying User Fields on PMPro < 3.4.
+											global $pmpro_user_fields;
+											foreach( $pmpro_user_fields as $group ) {
+												foreach( $group as $field ) {
+													if ( ! pmpro_is_field( $field ) ) {
+														continue;
 													}
-													$field->displayAtCheckout();
+
+													if ( ! pmpro_check_field_for_level( $field ) ) {
+														continue;
+													}
+
+													if( ! isset( $field->profile ) || $field->profile !== 'only' && $field->profile !== 'only_admin' ) {
+														if ( ! empty( $field->required ) ) {
+															$field->showrequired = 'label';
+														} else {
+															$field->showrequired = '';
+														}
+														$field->displayAtCheckout();
+													}
 												}
 											}
 										}
