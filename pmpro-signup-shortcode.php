@@ -411,36 +411,15 @@ function pmprosus_signup_shortcode($atts, $content=null, $code="")
 											// Loop through all the field groups.
 											$field_groups = PMPro_Field_Group::get_all();
 											foreach ( $field_groups as $field_group ) {
-												// Get the fields to display.
-												$fields_to_display = $field_group->get_fields_to_display(
+												$field_group->display(
 													array(
+														'markup' => 'div',
+														'show_group_label' => false,
 														'scope' => 'checkout',
+														'prefill_from_request' => true,
+														'show_required' => true,
 													)
 												);
-
-												if ( empty( $fields_to_display ) ) {
-													continue;
-												}
-
-												foreach ( $fields_to_display as $field ) {
-													// Display the field label, if it should be shown.
-													if ( ! empty( $field->showmainlabel ) ) { ?>
-														<label for="<?php echo esc_attr( $field->name ); ?>" class="<?php echo esc_attr( pmpro_get_element_class( 'pmpro_form_label' ) ); ?>">
-															<?php echo wp_kses_post( $field->label ); ?>
-															<?php
-															// Show an asterisk if the field is required.
-															if ( ! empty( $field->required ) && ! empty( $field->showrequired ) ) {
-																?>
-																<span class="<?php echo esc_attr( pmpro_get_element_class( 'pmpro_asterisk' ) ); ?>"><abbr title="<?php echo esc_attr__( 'Required Field', 'pmpro-signup-shortcode' ); ?>">*</abbr></span>
-																<?php
-															}
-															?>
-														</label>															
-														<?php
-													}
-													// Display the field.
-													$field->display();
-												}
 											}
 										} else {
 											// Legacy support for displaying User Fields on PMPro < 3.4.
